@@ -37,10 +37,10 @@ func makeBasicHost(listen string, pid peer.ID) (host.Host, error) {
 }
 
 func continueAsking() bool {
-	fmt.Println("Do you have other peers to add? (y/n)")
+	fmt.Println("Do you have other peers to add? (true/false)")
 	var shouldContinue bool
 
-	n, err:= fmt.Scanln(shouldContinue)
+	n, err:= fmt.Scanln(&shouldContinue)
 	if(n!=1 || err!=nil ){
 		panic(err)
 	}
@@ -55,8 +55,8 @@ func main() {
 	fmt.Println("Hello, welcome to my simple p2p app.")
 
 	fmt.Println("Please provide your prefered tcp port:")
-	var myTcp *string
-	n, err:= fmt.Scanln(*myTcp)
+	var myTcp string
+	n, err:= fmt.Scanln(&myTcp)
 
 	if(n!=1 || err!=nil ){
 		panic(err)
@@ -64,13 +64,13 @@ func main() {
 
 	fmt.Println("Provide your peerID")
 	var myId string
-	n, err= fmt.Scanln(myId)
+	n, err= fmt.Scanln(&myId)
 
 	if(n!=1 || err!=nil ){
 		panic(err)
 	}
 
-	listenaddr := fmt.Sprintf("/ip4/127.0.0.1/tcp/%d", myTcp)
+	listenaddr := "/ip4/127.0.0.1/tcp/" +  myTcp
 
 	myPId, err := peer.IDB58Decode(myId)
 	if err != nil {
@@ -80,6 +80,7 @@ func main() {
 
 	ha, err := makeBasicHost(listenaddr, myPId)
 	if err != nil {
+		fmt.Println(listenaddr)
 		log.Fatal(err)
 	}
 
@@ -95,7 +96,7 @@ func main() {
 	for ; continueAsking() ; {
 		fmt.Println("Please provide your next peer's tcp port")
 		var peerTcp string
-		n, err:= fmt.Scanln(peerTcp)
+		n, err:= fmt.Scanln(&peerTcp)
 
 		if(n!=1 || err!=nil ){
 			panic(err)
@@ -103,7 +104,7 @@ func main() {
 
 		fmt.Println("Provide your next peer's id")
 		var peerId string
-		n, err= fmt.Scanln(peerId)
+		n, err= fmt.Scanln(&peerId)
 
 		if(n!=1 || err!=nil ){
 			panic(err)
@@ -116,7 +117,7 @@ func main() {
 		pids = append(pids, peerid)
 
 
-		peerAddress := fmt.Sprintf("/ip4/127.0.0.1/tcp/%d/ipfs/%d", myTcp, peerId)
+		peerAddress := "/ip4/127.0.0.1/tcp/" + peerTcp + "/ipfs/" + peerId
 
 		ipfsaddr, err := ma.NewMultiaddr(peerAddress)
 		if err != nil {
@@ -134,8 +135,13 @@ func main() {
 		// contact it
 		ha.Peerstore().AddAddr(peerid, tptmaddr, pstore.PermanentAddrTTL)
 
+		fmt.Println("Press enter when ready")
+		var ok string
+		fmt.Scanln(&ok)
+
 		s, err := ha.NewStream(context.Background(), peerid, "/p2pPublish/0.0.0")
 		if err != nil {
+			fmt.Println("chalut")
 			log.Fatalln(err)
 		}
 
@@ -146,7 +152,7 @@ func main() {
 		fmt.Println("Write down a message")
 
 		var message string
-		n, err:= fmt.Scanln(message)
+		n, err:= fmt.Scanln(&message)
 
 		if(n!=1 || err!=nil ){
 			panic(err)
